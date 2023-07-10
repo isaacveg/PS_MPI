@@ -77,15 +77,15 @@ def main():
         )
 
         # start local training
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        tasks = [
-            asyncio.ensure_future(
-                local_training(client_config, train_loader, test_loader, logger)
-            )
-        ]
-        loop.run_until_complete(asyncio.wait(tasks))
-        loop.close()
+        # loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
+        # tasks = [
+        #     asyncio.ensure_future(
+        local_training(client_config, train_loader, test_loader, logger)
+        #     )
+        # ]
+        # loop.run_until_complete(asyncio.wait(tasks))
+        # loop.close()
 
         keys_to_send = ["params", "train_time", "send_time"]
 
@@ -94,10 +94,6 @@ def main():
         print("client {} with rank {}, send params, epoch {}, comm_tag {}".format(client_config.idx, rank, client_config.epoch_idx, comm_tag))
         communicate_with_server(config_to_send, comm_tag, 'send_config')
 
-        # send the configuration to the server
-        # if cfg['compress_method'] is not None:
-        #     client_config.seed = compress.param_compress(model=None, action=cfg['compress_method'], extra_info=cfg['compress_ratio'])
-        # communicate_with_server(client_config, comm_tag, action='send_config')
         comm_tag += 1
 
         if client_config.epoch_idx > cfg['epoch_num']:
