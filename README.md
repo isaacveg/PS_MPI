@@ -14,7 +14,7 @@ Refined version of ymliao98/PS_MPI
 3. import it in /datasets/__init__.py
 
 
-#### Own model
+#### 2. Own model
 1. create corresponding model_name.py in /models  
 2. define it in /models/model_name.py and return model class 
 3. import it in /models/__init__.py and decide when to use your model in create_model_instance()
@@ -32,9 +32,10 @@ python analysis_tools/generate_results.py
 
 
 #### 2. Generate pictures  
-TODO  
+Modify this according to your need. The current version will print required results into on figure. Edit it as your wish.
+python analysis_tools/draw_pics.py
 
 
 ## 4. Clear ALL log and saved models  
 WARNING: Clear all logs!  
-rm -rf model_save server_log clients_log  __pycache__ 
+rm -rf model_save server_log clients_log config_save __pycache__ 
