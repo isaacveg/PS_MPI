@@ -87,7 +87,7 @@ def main():
         # loop.run_until_complete(asyncio.wait(tasks))
         # loop.close()
 
-        keys_to_send = ["params", "train_time", "send_time"]
+        keys_to_send = ["params", "train_time", "lr"]
 
         # 构造需要发送的字典
         config_to_send = {key: getattr(client_config, key) for key in keys_to_send}
@@ -97,11 +97,12 @@ def main():
         comm_tag += 1
 
         if client_config.epoch_idx > cfg['epoch_num']:
+            print("finish, {}".format(client_config.epoch_idx))
             break
 
 
 
-async def local_training(config, train_loader, test_loader, logger):
+def local_training(config, train_loader, test_loader, logger):
     local_model = models.create_model_instance(cfg['dataset_type'], cfg['model_type'], cfg['classes_size'])
     torch.nn.utils.vector_to_parameters(config.params, local_model.parameters())
     local_model.to(device)
