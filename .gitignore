@@ -1,0 +1,8 @@
+**/__pycache__
+/model_save
+/server_log
+/clients_log
+/config_save
+/results
+/plot
+/.avazu
