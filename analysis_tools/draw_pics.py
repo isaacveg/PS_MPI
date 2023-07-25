@@ -16,9 +16,9 @@ if not os.path.exists(result_root):
     os.makedirs(result_root)
 
 draw_requirements = {
-    'epoch_num': [200]
-    ,'data_partition_pattern':[1]
-    ,'non_iid_ratio': [7]
+    'epoch_num': [5]
+    # ,'data_partition_pattern':[1]
+    # ,'non_iid_ratio': [7]
 }
 
 draw_contents = [
@@ -56,101 +56,57 @@ def main():
     print([cfg[0] for cfg in acquired_cfgs])
 
     ## 画准确率部分
-    if 'train_acc' in draw_contents:
-        plt.figure()
-        for idx, cfg in acquired_cfgs:
-            if 'train_acc' in draw_contents:
-                # 获取每个epoch的eval_acc_before和eval_acc_after的值和epoch_cnt
-                t, _, _ = process_server_log(server_logs[idx])
-                # draw_and_save(t, 'train_acc', cfg)
-                eval_acc_before = [(d.get('eval_acc_before')[0], d.get('eval_acc_before')[1]) for d in t]
-                eval_acc_after = [(d.get('eval_acc_after')[0], d.get('eval_acc_after')[1]) for d in t]
+    plt.figure()
+    for idx, cfg in acquired_cfgs:
+        if 'train_acc' in draw_contents:
+            loss, acc = process_server_log(server_logs[idx])
+            epochs = [i for i in range(len(acc))]
 
-                # 分离epoch_cnt和eval_acc_before和eval_acc_after的值
-                epochs, eval_acc_before_values = zip(*eval_acc_before)
-                _, eval_acc_after_values = zip(*eval_acc_after)
+            result_str = "_".join([ str(cfg[item]) for item in draw_requirements.keys()])
 
-                result_str = "_".join([ str(cfg[item]) for item in draw_requirements.keys()])
-                # 绘制eval_acc_before和eval_acc_after
-                plt.plot(epochs, eval_acc_before_values, label='bf_'+result_str)
-                plt.plot(epochs, eval_acc_after_values, label='af_'+result_str)
+            plt.plot(epochs, acc, label='acc_'+result_str)
 
-        plt.xlabel('Epochs')
-        plt.ylabel('Accuracy')
-        plt.title('Training Evaluation Accuracy')
-        plt.legend() 
-        plt.savefig(plot_root+'/train_acc.png')
+
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.title('Global Model Accuracy')
+    plt.legend() 
+    plt.savefig(plot_root+'/train_acc.png')
+
+    plt.figure()
+    for idx, cfg in acquired_cfgs:
+        if 'train_acc' in draw_contents:
+            loss, acc = process_server_log(server_logs[idx])
+            epochs = [i for i in range(len(acc))]
+
+            result_str = "_".join([ str(cfg[item]) for item in draw_requirements.keys()])
+
+            plt.plot(epochs, loss, label='acc_'+result_str)
+
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title('Global Model Loss')
+    plt.legend() 
+    plt.savefig(plot_root+'/train_loss.png')
         
     
-
-
-
-
-
-    # 读取server_log中的信息并画图
-    # for idx, cfg in acquired_cfgs:
-    #     if 'train_acc' in draw_contents:
-    #         plt.figure()
-    #         # 获取每个epoch的eval_acc_before和eval_acc_after的值和epoch_cnt
-    #         t, _, _ = process_server_log(server_logs[idx])
-    #         # draw_and_save(t, 'train_acc', cfg)
-    #         eval_acc_before = [(d.get('eval_acc_before')[0], d.get('eval_acc_before')[1]) for d in t]
-    #         eval_acc_after = [(d.get('eval_acc_after')[0], d.get('eval_acc_after')[1]) for d in t]
-
-    #         # 分离epoch_cnt和eval_acc_before和eval_acc_after的值
-    #         epochs, eval_acc_before_values = zip(*eval_acc_before)
-    #         _, eval_acc_after_values = zip(*eval_acc_after)
-
-    #         # 绘制eval_acc_before和eval_acc_after
-    #         plt.plot(epochs, eval_acc_before_values, label='eval_acc_before')
-    #         plt.plot(epochs, eval_acc_after_values, label='eval_acc_after')
-    #         plt.xlabel('Epochs')
-    #         plt.ylabel('Accuracy')
-    #         plt.title('Training Evaluation Accuracy')
-    #         plt.legend()
-    #         result_str = "_".join([ str(cfg[item]) for item in draw_requirements.keys()])
-    #         plt.savefig(plot_root+'/train_acc_{}.png'.format(result_str))
-        
-    
-
 
 
 def process_server_log(filename):
     with open(filename, 'r') as f:
         lines = f.readlines()   
-        train_data, eval_data, global_data = [],[],[]
+        t_loss, t_acc = [], []
         epoch_cnt = 0
+        line_cnt = 0
         for line in lines:
             if 'Epoch:' in line:
                 epoch_cnt = int(line.split(': ')[1])
-            elif 'Selected client idxes' in line:
-                if 'Eval' in lines[lines.index(line)+1]:
-                    train_data.append({})
-                    eval_acc_before = float(lines[lines.index(line)+1].split(': ')[1])
-                    eval_acc_after = float(lines[lines.index(line)+2].split(': ')[1])
-                    eval_loss_before = float(lines[lines.index(line)+3].split(': ')[1])
-                    eval_loss_after = float(lines[lines.index(line)+4].split(': ')[1])
-                    train_data[-1]['eval_acc_before'] = (epoch_cnt, eval_acc_before)
-                    train_data[-1]['eval_acc_after'] =  (epoch_cnt, eval_acc_after)
-                    train_data[-1]['eval_loss_before'] =  (epoch_cnt, eval_loss_before)
-                    train_data[-1]['eval_loss_after'] =  (epoch_cnt, eval_loss_after)
-            elif 'Evaling clients' in line:
-                eval_data.append({})
-                eval_acc_before = float(lines[lines.index(line)+1].split(': ')[1])
-                eval_acc_after = float(lines[lines.index(line)+2].split(': ')[1])
-                eval_loss_before = float(lines[lines.index(line)+3].split(': ')[1])
-                eval_loss_after = float(lines[lines.index(line)+4].split(': ')[1])
-                eval_data[-1]['eval_acc_before'] =(epoch_cnt, eval_acc_before)
-                eval_data[-1]['eval_acc_after'] = (epoch_cnt, eval_acc_after)
-                eval_data[-1]['eval_loss_before'] =  (epoch_cnt, eval_loss_before)
-                eval_data[-1]['eval_loss_after'] = (epoch_cnt, eval_loss_after)
             elif 'Test_Loss' in line:
-                global_data.append({})
-                test_loss = float(line.split(': ')[1])
-                test_acc = float(lines[lines.index(line)+1].split(': ')[1])
-                global_data[-1]['test_loss'] = test_loss
-                global_data[-1]['test_acc'] = test_acc
-    return train_data, eval_data, global_data
+                t_loss.append(float(line.split(': ')[1]))
+            elif 'Test_Acc' in line:
+                t_acc.append(float(line.split(': ')[1]))
+            line_cnt += 1
+    return t_loss, t_acc
 
 # 
 def get_config(path_name):
